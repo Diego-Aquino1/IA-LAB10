@@ -1,0 +1,38 @@
+Datos de entrenamiento:
+   fever     cough   fatigue      pain    disease
+0    yes    severe      mild      mild   Covid-19
+1    yes  moderate      mild  moderate   Covid-19
+2     no  moderate      mild  moderate  SARS-CoV1
+3     no    severe      mild      mild   Covid-19
+4    yes  moderate      mild  moderate   Covid-19
+5    yes    severe  moderate  moderate  SARS-CoV1
+6     no  moderate  moderate  moderate  SARS-CoV1
+7     no  moderate    severe      mild   Covid-19
+8    yes  moderate    severe  moderate  SARS-CoV1
+9     no  moderate    severe    severe  SARS-CoV1
+10    no    severe      mild    severe   Covid-19
+11    no      mild      mild    severe  SARS-CoV1
+
+Datos de prueba:
+  fever     cough   fatigue      pain    disease
+0   yes  moderate  moderate    severe  SARS-CoV1
+1   yes    severe      mild  moderate   Covid-19
+2    no  moderate      mild    severe  SARS-CoV1
+
+Tasa de acierto del árbol: 100.00%
+Clasificación de datos de prueba:
+Datos: fever           yes
+cough      moderate
+fatigue    moderate
+pain         severe
+Name: 0, dtype: object - Clase real: SARS-CoV1 - Clase pronosticada: SARS-CoV1
+Datos: fever           yes
+cough        severe
+fatigue        mild
+pain       moderate
+Name: 1, dtype: object - Clase real: Covid-19 - Clase pronosticada: Covid-19
+Datos: fever            no
+cough      moderate
+fatigue        mild
+pain         severe
+Name: 2, dtype: object - Clase real: SARS-CoV1 - Clase pronosticada: SARS-CoV1
