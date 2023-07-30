@@ -1,0 +1,13 @@
+fever,cough,fatigue,pain,disease
+yes,severe,mild,mild,Covid-19
+yes,moderate,mild,moderate,Covid-19
+no,moderate,mild,moderate,SARS-CoV1
+no,severe,mild,mild,Covid-19
+yes,moderate,mild,moderate,Covid-19
+yes,severe,moderate,moderate,SARS-CoV1
+no,moderate,moderate,moderate,SARS-CoV1
+no,moderate,severe,mild,Covid-19
+yes,moderate,severe,moderate,SARS-CoV1
+no,moderate,severe,severe,SARS-CoV1
+no,severe,mild,severe,Covid-19
+no,mild,mild,severe,SARS-CoV1
