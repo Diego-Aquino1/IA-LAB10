@@ -19,8 +19,19 @@ Datos de prueba:
 1   yes    severe      mild  moderate   Covid-19
 2    no  moderate      mild    severe  SARS-CoV1
 
-Tasa de acierto del árbol: 100.00%
-Clasificación de datos de prueba:
+Tasa de acierto del arbol: 100.00%
+Ganancia de informacion en cada paso:
+Paso 1: 0.3113
+Paso 2: 0.3789
+Paso 3: 0.0000
+Paso 4: 0.4200
+Paso 5: 0.9183
+Paso 6: 0.0000
+Paso 7: 0.0000
+Paso 8: 0.0000
+Paso 9: 0.0000
+
+Clasificacion de datos de prueba:
 Datos: fever           yes
 cough      moderate
 fatigue    moderate
