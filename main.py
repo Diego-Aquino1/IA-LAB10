@@ -1,13 +1,108 @@
 import pandas as pd
-from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
+import math
 
-# Función auxiliar para obtener la ganancia de información en cada nodo
-def get_information_gain(tree, node_id):
-    gain = tree.impurity[node_id] - (tree.impurity[tree.children_left[node_id]] * tree.weighted_n_node_samples[tree.children_left[node_id]] +
-                                     tree.impurity[tree.children_right[node_id]] * tree.weighted_n_node_samples[tree.children_right[node_id]]) / tree.weighted_n_node_samples[node_id]
-    return gain
+# Clase para representar el árbol de decisiones
+class DecisionTree:
+    def __init__(self, max_depth=None):
+        self.max_depth = max_depth
+        self.tree = None
+
+    # Función para calcular la entropía de un conjunto de datos
+    def _entropy(self, y):
+        entropy = 0
+        classes = y.unique()
+        total_samples = len(y)
+
+        for c in classes:
+            p_c = len(y[y == c]) / total_samples
+            entropy -= p_c * math.log2(p_c)
+
+        return entropy
+
+    # Función para calcular la ganancia de información de un atributo en un conjunto de datos
+    def _information_gain(self, X, y, feature):
+        total_entropy = self._entropy(y)
+        feature_values = X[feature].unique()
+
+        weighted_entropy = 0
+        for val in feature_values:
+            subset_y = y[X[feature] == val]
+            weight = len(subset_y) / len(y)
+            weighted_entropy += weight * self._entropy(subset_y)
+
+        return total_entropy - weighted_entropy
+
+    # Función para encontrar el mejor atributo para dividir el conjunto de datos
+    def _find_best_split(self, X, y):
+        best_feature = None
+        best_info_gain = -1
+
+        for feature in X.columns:
+            info_gain = self._information_gain(X, y, feature)
+            if info_gain > best_info_gain:
+                best_feature = feature
+                best_info_gain = info_gain
+
+        return best_feature, best_info_gain
+
+    # Función para construir el árbol de decisiones recursivamente
+    def _build_tree(self, X, y, depth=0):
+        if depth == self.max_depth or len(y.unique()) == 1:
+            return y.mode().iloc[0]
+
+        best_feature, info_gain = self._find_best_split(X, y)
+        tree = { 'feature': best_feature, 'info_gain': info_gain, 'samples': len(y),
+                 'value': [len(y[y == c]) for c in y.unique()] }
+
+        if best_feature is None:
+            return tree
+
+        tree['children'] = {}
+        for val in X[best_feature].unique():
+            subset_X = X[X[best_feature] == val].drop(best_feature, axis=1)
+            subset_y = y[X[best_feature] == val]
+            tree['children'][val] = self._build_tree(subset_X, subset_y, depth + 1)
+
+        return tree
+
+    # Función para hacer predicciones
+    def _predict(self, row, tree):
+        if not isinstance(tree, dict):
+            return tree
+
+        feature = tree['feature']
+        value = row[feature]
+
+        if value not in tree['children']:
+            return tree['children']['__default']
+        
+        return self._predict(row, tree['children'][value])
+
+    # Función para calcular la tasa de acierto
+    def _accuracy(self, y_true, y_pred):
+        return sum(y_true == y_pred) / len(y_true)
+
+    # Función para entrenar el modelo
+    def fit(self, X, y):
+        self.tree = self._build_tree(X, y)
+
+    # Función para hacer predicciones
+    def predict(self, X):
+        return [self._predict(row, self.tree) for _, row in X.iterrows()]
+
+    # Función para obtener la ganancia de información en cada paso
+    def get_information_gains(self):
+        information_gains = []
+        self._get_information_gains(self.tree, information_gains)
+        return information_gains
+
+    def _get_information_gains(self, tree, information_gains):
+        if 'feature' in tree:
+            information_gains.append(tree['info_gain'])
+            for _, child_tree in tree['children'].items():
+                self._get_information_gains(child_tree, information_gains)
+
 
 # Lee los datos de entrenamiento y prueba desde los archivos .csv
 train_data = pd.read_csv('virus_train.csv')
@@ -24,36 +119,17 @@ y_train = train_data['disease']
 y_test = test_data['disease']
 
 # Crea y entrena el clasificador del árbol de decisiones
-clf = DecisionTreeClassifier(criterion='entropy')
+clf = DecisionTree(max_depth=None)
 clf.fit(X_train, y_train)
 
 # Realiza predicciones en los datos de prueba
 y_pred = clf.predict(X_test)
 
 # Calcula la tasa de acierto del árbol
-accuracy = accuracy_score(y_test, y_pred)
-
-# Visualiza el árbol de decisiones y muestra la ganancia de información en cada paso
-plt.figure(figsize=(10, 8))
-plot_tree(clf, feature_names=X_train.columns, class_names=clf.classes_, filled=True, impurity=True, fontsize=10)
-plt.show()
+accuracy = clf._accuracy(y_test, y_pred)
 
 # Obtener la ganancia de información en cada paso
-def get_information_gains(tree):
-    information_gains = []
-    _get_information_gains(tree.tree_, 0, information_gains)
-    return information_gains
-
-def _get_information_gains(tree, node_id, information_gains):
-    gain_info = get_information_gain(tree, node_id)
-    if gain_info is not None:
-        information_gains.append(gain_info)
-    if tree.children_left[node_id] != -1:
-        _get_information_gains(tree, tree.children_left[node_id], information_gains)
-    if tree.children_right[node_id] != -1:
-        _get_information_gains(tree, tree.children_right[node_id], information_gains)
-
-information_gains = get_information_gains(clf)
+information_gains = clf.get_information_gains()
 
 # Guarda los resultados en un archivo .txt
 with open('results.txt', 'w') as file:
@@ -62,12 +138,12 @@ with open('results.txt', 'w') as file:
     file.write("Datos de prueba:\n")
     file.write(str(test_data) + "\n\n")
     file.write("Tasa de acierto del arbol: {:.2f}%\n".format(accuracy * 100))
-    file.write("Ganancia de informacion en cada paso:\n")
+    file.write("\nGanancia de informacion en cada paso:\n")
     for idx, gain in enumerate(information_gains):
         file.write("Paso {}: {:.4f}\n".format(idx + 1, gain))
     file.write("\nClasificacion de datos de prueba:\n")
     for i, row in test_data.iterrows():
-        file.write("Datos: {} - Clase real: {} - Clase pronosticada: {}\n".format(
+        file.write("Datos:\n{} - Clase real: {} - Clase pronosticada: {}\n".format(
             row.drop('disease'), row['disease'], y_pred[i]))
 
-print("Proceso completado. Los resultados se han guardado en 'results.txt' y se ha mostrado el arbol de decisiones.")
+print("Proceso completado. Los resultados se han guardado en 'results.txt'")
